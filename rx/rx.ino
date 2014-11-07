@@ -3,16 +3,17 @@
 // updated 6-4-2012 by paul badger from code by <jcw@equi4.com>
 // http://opensource.org/licenses/mit-license.php
 // Sketch to receive data from SimpleSend
-
+#define RF69_COMPAT 1
 #include <PortsLCD.h>
 #include <JeeLib.h>
 
 #define SERIAL_DEBUG 1
-#define RF69_COMPAT 
+
 /************************ important note ***************************/
 #define TRANSMIT_DELAY 9000   //  This must be 2.15 Transmit Delay in transmitter sketch
 #define screen_width 16
 #define screen_height 2
+
 PortI2C myI2C (1);
 LiquidCrystalI2C lcd (myI2C);
 
@@ -22,9 +23,9 @@ unsigned long lastRX, lastCheck;
 void setup() {
   Serial.begin(57600);
   lcd.begin(screen_width, screen_height);
-  
-        delay(1000);
-      lcd.clear();
+
+
+  lcd.clear();
   lcd.print("PropaneReceive");
   Serial.println("[PropaneReceive]");
   delay(1000);
@@ -33,8 +34,11 @@ void setup() {
   // nodeId parameter should be in range of to 1-26
   // netGroup parameter should be in range of to 1-212
   // red dots on radios are 915Mhz, green dots are 434 Mhz
-    //lcd.clear();
-
+  //lcd.clear();
+  
+ lcd.setCursor(0, 0);
+ lcd.print("Init Done");
+   delay(1000);
   lastRX = 0xFFFFFFFF;
 }
 
@@ -43,9 +47,9 @@ void loop() {
   // rf12_recvDone() is true if new information has been received.
   // re12_crc == 0 indicates good transmission, checks validity of data
   if (rf12_recvDone() && rf12_crc == 0) {  // received good data if true
-  lastRX = millis();
+    lastRX = millis();
     processData();
-    
+
   }
 }
 
@@ -69,17 +73,17 @@ void processData() {
 }
 
 void checkForDeadBattery() {
-  if (millis() - lastCheck > 1000){
+  if (millis() - lastCheck > 1000) {
     lastCheck = millis();
-  if (millis() - lastRX > TRANSMIT_DELAY + 10000) { // wait 10 seconds after last receive should have been received
-    lcd.clear();
-  lcd.setCursor(0, 0); //print on first line
-  lcd.print("No RX for ");
-   lcd.print(millis() - lastRX);
-    lcd.print("S");
+    if (millis() - lastRX > TRANSMIT_DELAY + 10000) { // wait 10 seconds after last receive should have been received
+      lcd.clear();
+      lcd.setCursor(0, 0); //print on first line
+      lcd.print("No RX for ");
+      lcd.print(millis() - lastRX);
+      lcd.print("S");
+    }
+
   }
- 
-}
 }
 
 void Print(float *buf, bool serialDebug) {
