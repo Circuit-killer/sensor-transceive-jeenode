@@ -35,11 +35,11 @@ void setup() {
   // netGroup parameter should be in range of to 1-212
   // red dots on radios are 915Mhz, green dots are 434 Mhz
   //lcd.clear();
-  
- lcd.setCursor(0, 0);
-   lcd.clear();
- lcd.print("Init Done");
- delay(1000);
+
+  lcd.setCursor(0, 0);
+  lcd.clear();
+  lcd.print("Init Done");
+  delay(1000);
   lastRX = 0xFFFFFFFF;
 }
 
@@ -80,18 +80,18 @@ void checkForDeadBattery() {
       lcd.clear();
       lcd.setCursor(0, 0); //print on first line
       lcd.print("No RX for ");
-      if ((millis() - lastRX) > 60L*60L*1000L){  // hr
-       lcd.print((millis() - lastRX)/ (60L*60L*1000L));
-       lcd.print("hr");                
+      if ((millis() - lastRX) > 60L * 60L * 1000L) { // hr
+        lcd.print((millis() - lastRX) / (60L * 60L * 1000L));
+        lcd.print("hr");
       }
-      if ((millis() - lastRX) > 60000L){
-       lcd.print((millis() - lastRX)/60000L);
-       lcd.print("min");                
+      else if ((millis() - lastRX) > 60000L) {
+        lcd.print((millis() - lastRX) / 60L * 1000L);
+        lcd.print("min");
       }
-      
+
       else {
-      lcd.print((millis() - lastRX)/1000);
-      lcd.print("sec");
+        lcd.print((millis() - lastRX) / 1000);
+        lcd.print("sec");
       }
     }
 
