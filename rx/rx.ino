@@ -80,11 +80,11 @@ void checkForDeadBattery() {
       lcd.clear();
       lcd.setCursor(0, 0); //print on first line
       lcd.print("No RX for ");
-      if ((millis() - lastRX) > 60L*60L*1000L{  // hr
+      if ((millis() - lastRX) > 60L*60L*1000L){  // hr
        lcd.print((millis() - lastRX)/ (60L*60L*1000L));
        lcd.print("hr");                
       }
-      if ((millis() - lastRX) > 60000L{
+      if ((millis() - lastRX) > 60000L){
        lcd.print((millis() - lastRX)/60000L);
        lcd.print("min");                
       }
