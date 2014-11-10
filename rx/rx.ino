@@ -37,8 +37,9 @@ void setup() {
   //lcd.clear();
   
  lcd.setCursor(0, 0);
+   lcd.clear();
  lcd.print("Init Done");
-   delay(1000);
+ delay(1000);
   lastRX = 0xFFFFFFFF;
 }
 
@@ -58,7 +59,7 @@ void processData() {
   //int* CurrentRecv = buf;
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print("HE, Tmp, V");
+  lcd.print("Hall, Temp, BattV");
   lcd.setCursor(0, 1);
   //Serial.print(buf[0]);          // sequence number
   // lcd.print(buf[0]);
@@ -79,8 +80,19 @@ void checkForDeadBattery() {
       lcd.clear();
       lcd.setCursor(0, 0); //print on first line
       lcd.print("No RX for ");
-      lcd.print(millis() - lastRX);
-      lcd.print("S");
+      if ((millis() - lastRX) > 60L*60L*1000L{  // hr
+       lcd.print((millis() - lastRX)/ (60L*60L*1000L));
+       lcd.print("hr");                
+      }
+      if ((millis() - lastRX) > 60000L{
+       lcd.print((millis() - lastRX)/60000L);
+       lcd.print("min");                
+      }
+      
+      else {
+      lcd.print((millis() - lastRX)/1000);
+      lcd.print("sec");
+      }
     }
 
   }

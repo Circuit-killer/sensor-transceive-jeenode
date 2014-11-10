@@ -1,11 +1,8 @@
+#define RF69_COMPAT 1
 #include <JeeLib.h>
 #include <avr/sleep.h>
 #define DEBUG 1
-#define RF69_COMPAT 1
-#define TRANSMIT_DELAY 4000 /* 2.15x this number is the delay. 
-  Shit, I don't know. Synchronise the transmit delay with the receiver, if you
-  feel like doing arithmetic to compensate for hardware problems and you
-  want to know when you're out of battery or you forgot to turn the fuckin' thing on.*/
+#define TRANSMIT_DELAY 4000
 
 struct {
     int sequence; // a counter
@@ -15,9 +12,6 @@ struct {
 } payload;
 
 MilliTimer timer;
-
-// This power-saving code was shamelessly stolen from the rooms.pde sketch,
-// see http://code.jeelabs.org/viewvc/svn/jeelabs/trunk/jeemon/sketches/rooms/
 
 EMPTY_INTERRUPT(WDT_vect); // just wakes us up to resume
 
@@ -63,10 +57,9 @@ static byte loseSomeTime (word msecs) {
 // End of new power-saving code.
 
 void setup() {
-
   Serial.begin(57600);
   Serial.print("\n[propaneDemo]");
-    rf12_initialize(3, RF12_915MHZ, 212); // node 3, 915MHz, net group 212915
+    rf12_initialize(3, RF12_915MHZ, 212); // node 3, 915MHz, net group 212
     analogReference(INTERNAL); // use the 1.1v internal reference voltage
       Sleepy::loseSomeTime(100);  //uC to sleep
 }
@@ -76,7 +69,7 @@ void loop() {
     // note: the node's sense of time is no longer 100% accurate after sleeping
     rf12_sleep(RF12_SLEEP);          // turn the radio off //RF69 compatible?
    //  Sleepy::loseSomeTime(timer.remaining()); // go into a (controlled) comatose state
-    while (!timer.poll(waitTime))
+    while (!timer.poll(400))
         Sleepy::loseSomeTime(timer.remaining()); // go into a (controlled) comatose state
         lowPower(SLEEP_MODE_IDLE);  // still not running at full power
     digitalWrite(5, HIGH); // enable the power pin to read
@@ -89,14 +82,12 @@ void loop() {
     payload.temperature = analogRead(A0)*100;
     digitalWrite(5, LOW); // got our result, turn off power
 
- #ifdef DEBUG:
     Serial.print((int) payload.hallEffectValue);
     Serial.print("   ");
     Serial.print((int) payload.temperature);
     Serial.print("   ");
     Serial.println((int) payload.battVoltage); 
     Serial.flush();
-#endif 
    
     rf12_sleep(RF12_WAKEUP);         // turn radio back on at the last moment
     
