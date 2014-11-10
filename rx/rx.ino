@@ -1,15 +1,9 @@
-
-// JN_SimpleReceive.pde   Illustrates receiving data from JN_SimpleSend.pde
-// updated 6-4-2012 by paul badger from code by <jcw@equi4.com>
-// http://opensource.org/licenses/mit-license.php
-// Sketch to receive data from SimpleSend
+// receive data from a jeenode with some sensors on voltage dividers
 #define RF69_COMPAT 1
 #include <PortsLCD.h>
 #include <JeeLib.h>
 
 #define SERIAL_DEBUG 1
-
-/************************ important note ***************************/
 #define TRANSMIT_DELAY 9000   //  This must be 2.15 Transmit Delay in transmitter sketch
 #define screen_width 16
 #define screen_height 2
@@ -50,7 +44,6 @@ void loop() {
   if (rf12_recvDone() && rf12_crc == 0) {  // received good data if true
     lastRX = millis();
     processData();
-
   }
 }
 
@@ -61,15 +54,23 @@ void processData() {
   lcd.setCursor(0, 0);
   lcd.print("Hall, Temp, BattV");
   lcd.setCursor(0, 1);
-  //Serial.print(buf[0]);          // sequence number
-  // lcd.print(buf[0]);
-  // Serial.print("  ");
-  // lcd.print(" ");
+  #ifdef debug
+  Serial.print(buf[0]); // sequence number
+  Serial.print(buf[1]); // hall effect
+  Serial.print("   ");
+  Serial.print(buf[2]); //temperature
+  Serial.print("   ");
+  Serial.println(buf[3]); // voltage
+  #endif
   float HE = buf[1]; // No calculation here, yet
-  float TMP = CtoF(ADCtoDegC((float) buf[2] / 100)); // Convert the temperature in ADC units to C, then to archaic imperial units
+  float TMP = CtoF(ADCtoDegC((float) buf[2] / 100, 2.5)); // Convert the temperature in ADC units to C, then to archaic imperial units
   float Volts = buf[3] * 0.00117043121; // coefficient determined experimentally
   float output[] = {HE, TMP, Volts};
-  Print(output, SERIAL_DEBUG);
+  lcd.print(output[0], 1); // 1 digit for the hall effect
+  lcd.print(" ");
+  lcd.print(output[1], 1); // 1 digit for the temperature
+  lcd.print("  ");
+  lcd.print(output[2], 2); // 2 digits for the voltage
   delay(100);
 }
 
@@ -88,37 +89,19 @@ void checkForDeadBattery() {
         lcd.print((millis() - lastRX) / 60L / 1000L);
         lcd.print("min");
       }
-
       else {
         lcd.print((millis() - lastRX) / 1000);
         lcd.print("sec");
       }
     }
-
   }
 }
 
-void Print(float *buf, bool serialDebug) {
-  int bufsize = (sizeof buf) + 1;
-  //prints using the LCD, space length " "
-  for (int i = 0; i < bufsize; i++) {
-    lcd.print(buf[i], 1);
-    lcd.print(" ");
-    if (serialDebug) {
-      Serial.print(buf[i]);
-      Serial.print("   ");
-    }
-  }
-  if (serialDebug) {
-    Serial.println();
-  }
-}
-
-float ADCtoDegC(int rawTemp) {
+float ADCtoDegC(int rawValue, float ratio) {
   float degreesPerVolt = 0.02;
   float ADCunits = 1.1 / 1024; // Using the internal 1.1V ADC
-  float voltageDivRatio = 2.5; // We have a voltage divider, 100k on one side, 10k on the other, so it divides the voltage by 2.5
-  return ((rawTemp * ADCunits * voltageDivRatio) / degreesPerVolt);
+  float voltageDivRatio = ratio; // We have a voltage divider, we want to scale as if it isn't there. 1 if you don't have one.
+  return ((rawValue * ADCunits * voltageDivRatio) / degreesPerVolt);
 }
 
 float CtoF(float C) {
