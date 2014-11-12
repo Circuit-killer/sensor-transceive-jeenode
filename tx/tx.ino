@@ -5,6 +5,19 @@
 #define GRP 212
 #define NODE 3
 #define TRANSMIT_DELAY 1000 // Transmit delay in JC units, 1 JC = ~2.5microseconds
+#define sensorPowerPin 4
+#define tempPin A3
+#define voltagePin A1
+#define hallEffectPin A0
+
+
+// old pin definitions
+/*#define sensorPowerPin 5
+#define tempPin A0
+#define voltagePin A3
+#define hallEffectPin A1
+*/
+
 
 // A struct with the sort of data we're going to send.
 struct {
@@ -65,6 +78,7 @@ void setup() {
   rf12_initialize(NODE, RF12_915MHZ, GRP); //node, frequency, net group
   analogReference(INTERNAL); // use the 1.1v internal reference voltage
   Sleepy::loseSomeTime(100);  //uC to sleep
+  //pinMode(sensorPowerPin, OUTPUT);
 }
 
 void loop() {
@@ -74,15 +88,16 @@ void loop() {
   while (!timer.poll(TRANSMIT_DELAY))
     Sleepy::loseSomeTime(timer.remaining()); // go into a (controlled) comatose state
   lowPower(SLEEP_MODE_IDLE);  // still not running at full power
-  digitalWrite(5, HIGH); // enable the power pin to read
+  digitalWrite(sensorPowerPin, HIGH); // enable the power pin to read
+  delay(10);
   payload.sequence++;
-  pinMode(A0, INPUT); // for temperature
-  pinMode(A3, INPUT); // for voltage
-  pinMode(A1, INPUT); // for hall effect sensor
-  payload.battVoltage = analogRead(A3) * 10;
-  payload.hallEffectValue = analogRead(A1);
-  payload.temperature = analogRead(A0) * 100;
-  digitalWrite(5, LOW); // got our result, turn off power
+  pinMode(tempPin, INPUT); // for temperature
+  pinMode(voltagePin, INPUT); // for voltage
+  pinMode(hallEffectPin, INPUT); // for hall effect sensor
+  payload.battVoltage = analogRead(voltagePin) * 10;
+  payload.hallEffectValue = analogRead(hallEffectPin);
+  payload.temperature = analogRead(tempPin)*100;
+  digitalWrite(sensorPowerPin, LOW); // got our result, turn off power
 
 #ifdef DEBUG // Serial debug dump payload
   Serial.print((int) payload.hallEffectValue);
