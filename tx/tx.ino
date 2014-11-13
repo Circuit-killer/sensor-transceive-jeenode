@@ -4,7 +4,7 @@
 #define DEBUG 1
 #define GRP 212
 #define NODE 3
-#define TRANSMIT_DELAY 1000 // Transmit delay in JC units, 1 JC = ~2.5microseconds
+#define TRANSMIT_DELAY 360000 // Transmit delay in JC units, 1 JC = ~2.5milliseconds
 #define sensorPowerPin 4
 #define tempPin A3
 #define voltagePin A1
@@ -89,7 +89,6 @@ void loop() {
     Sleepy::loseSomeTime(timer.remaining()); // go into a (controlled) comatose state
   lowPower(SLEEP_MODE_IDLE);  // still not running at full power
   digitalWrite(sensorPowerPin, HIGH); // enable the power pin to read
-  delay(10);
   payload.sequence++;
   pinMode(tempPin, INPUT); // for temperature
   pinMode(voltagePin, INPUT); // for voltage
