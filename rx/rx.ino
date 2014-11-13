@@ -54,28 +54,29 @@ void processData() {
   lcd.setCursor(0, 0);
   lcd.print("Hall, Temp, BattV");
   lcd.setCursor(0, 1);
-  #ifdef debug
+#ifdef debug
   Serial.print(buf[0]); // sequence number
   Serial.print(buf[1]); // hall effect
   Serial.print("   ");
   Serial.print(buf[2]); //temperature
   Serial.print("   ");
   Serial.println(buf[3]); // voltage
-  #endif
+#endif
   float HE = ADCtoVoltage(buf[1], 5.7); // Convert to volts
   float TMP = CtoF(voltsToTemp(ADCtoVoltage((float) buf[2] / 100, 2.5))); // Convert the temperature in ADC units to C, then to archaic imperial units
   float Volts = buf[3] * 0.00117043121; // coefficient determined experimentally
-  float output[] = {HE, TMP, Volts};
+  float output[] = {
+    HE, TMP, Volts  };
   lcd.print(output[0], 2); // 2 digits for the hall effect
   lcd.print(" ");
   lcd.print(output[1], 1); // 1 digit for the temperature
   lcd.print("  ");
   lcd.print(output[2], 2); // 2 digits for the voltage
   if (output[2] < 4.80){   // end of coin cell discharge curve
-                           // there should still be ~4% in the batt's at the point
-           lcd.setCursor(0, 0);
-             lcd.print("Chng batt's now!");
- }
+    // there should still be ~4% in the batt's at this point
+    lcd.setCursor(0, 0);
+    lcd.print("Chng batt's now!");
+  }
   delay(100);
 }
 
@@ -118,3 +119,4 @@ float voltsToTemp(float volts) {
 float CtoF(float C) {
   return (C * 9.0 / 5) + 32;
 }
+
