@@ -62,15 +62,20 @@ void processData() {
   Serial.print("   ");
   Serial.println(buf[3]); // voltage
   #endif
-  float HE = buf[1]; // No calculation here, yet
-  float TMP = CtoF(ADCtoDegC((float) buf[2] / 100, 2.5)); // Convert the temperature in ADC units to C, then to archaic imperial units
+  float HE = ADCtoVoltage(buf[1], 5.7); // Convert to volts
+  float TMP = CtoF(voltsToTemp(ADCtoVoltage((float) buf[2] / 100, 2.5))); // Convert the temperature in ADC units to C, then to archaic imperial units
   float Volts = buf[3] * 0.00117043121; // coefficient determined experimentally
   float output[] = {HE, TMP, Volts};
-  lcd.print(output[0], 1); // 1 digit for the hall effect
+  lcd.print(output[0], 2); // 2 digits for the hall effect
   lcd.print(" ");
   lcd.print(output[1], 1); // 1 digit for the temperature
   lcd.print("  ");
   lcd.print(output[2], 2); // 2 digits for the voltage
+  if (output[2] < 4.80){   // end of coin cell discharge curve
+                           // there should still be ~4% in the batt's at the point
+           lcd.setCursor(0, 0);
+             lcd.print("Chng batt's now!");
+ }
   delay(100);
 }
 
@@ -78,30 +83,36 @@ void checkForDeadBattery() {
   if (millis() - lastCheck > 1000) {
     lastCheck = millis();
     if (millis() - lastRX > TRANSMIT_DELAY + 10000) { // wait 10 seconds after last receive should have been received
-      lcd.clear();
+      //lcd.clear(); leave last result on bottom of screen by not clearing
+      lcd.setCursor(0, 0);
+      lcd.print("                "); // dirty trick to prevent undercharacters
       lcd.setCursor(0, 0); //print on first line
       lcd.print("No RX for ");
       if ((millis() - lastRX) > 60L * 60L * 1000L) { // hr
-        lcd.print((millis() - lastRX) / (60L * 60L / 1000L));
-        lcd.print("hr");
+        lcd.print((millis() - lastRX) / (60L * 60L * 1000L));
+        lcd.print("  hr");
       }
       else if ((millis() - lastRX) > 60000L) {
-        lcd.print((millis() - lastRX) / 60L / 1000L);
-        lcd.print("min");
+        lcd.print((millis() - lastRX) / (60L * 1000L));
+        lcd.print(" min");
       }
       else {
         lcd.print((millis() - lastRX) / 1000);
-        lcd.print("sec");
+        lcd.print(" sec");
       }
     }
   }
 }
 
-float ADCtoDegC(int rawValue, float ratio) {
-  float degreesPerVolt = 0.02;
+float ADCtoVoltage(int rawValue, float ratio) {
   float ADCunits = 1.1 / 1024; // Using the internal 1.1V ADC
   float voltageDivRatio = ratio; // We have a voltage divider, we want to scale as if it isn't there. 1 if you don't have one.
-  return ((rawValue * ADCunits * voltageDivRatio) / degreesPerVolt);
+  return rawValue * ADCunits * voltageDivRatio;
+}
+
+float voltsToTemp(float volts) {
+  float degreesPerVolt = 0.02;
+  return volts / degreesPerVolt;
 }
 
 float CtoF(float C) {
