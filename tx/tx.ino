@@ -4,7 +4,8 @@
 #define DEBUG 1
 #define GRP 212
 #define NODE 3
-#define TRANSMIT_DELAY 360000 // Transmit delay in JC units, 1 JC = ~2.5milliseconds
+//#define TRANSMIT_DELAY 360000 // Transmit delay in JC units, 1 JC = ~2.5milliseconds
+#define TRANSMIT_DELAY 1000
 #define sensorPowerPin 4
 #define tempPin A3
 #define voltagePin A1
@@ -94,6 +95,7 @@ void loop() {
   pinMode(voltagePin, INPUT); // for voltage
   pinMode(hallEffectPin, INPUT); // for hall effect sensor
   payload.battVoltage = analogRead(voltagePin) * 10;
+  Sleepy::loseSomeTime(20); // let the ADC cool down for a bit
   payload.hallEffectValue = analogRead(hallEffectPin);
   payload.temperature = analogRead(tempPin)*100;
   digitalWrite(sensorPowerPin, LOW); // got our result, turn off power
