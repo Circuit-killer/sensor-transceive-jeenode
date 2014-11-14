@@ -4,7 +4,7 @@
 #include <JeeLib.h>
 
 #define SERIAL_DEBUG 1
-#define TRANSMIT_DELAY 9000   //  This must be 2.15 Transmit Delay in transmitter sketch
+#define TRANSMIT_DELAY 600000L // 10 minutes
 #define screen_width 16
 #define screen_height 2
 
