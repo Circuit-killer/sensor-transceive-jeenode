@@ -4,9 +4,10 @@
 #include <JeeLib.h>
 
 #define SERIAL_DEBUG 1
-#define TRANSMIT_DELAY 600000L // 10 minutes
+#define TRANSMIT_DELAY_IN_MINS 10 // in minutes, set to the same as the one tx has
 #define screen_width 16
 #define screen_height 2
+int TRANSMIT_DELAY = TRANSMIT_DELAY_IN_MIN*60*1000L;
 
 PortI2C myI2C (1);
 LiquidCrystalI2C lcd (myI2C);
