@@ -5,7 +5,8 @@
 #define GRP 212
 #define NODE 3
 //#define TRANSMIT_DELAY 360000 // Transmit delay in JC units, 1 JC = ~2.5milliseconds
-#define TRANSMIT_DELAY 1000
+//#define TRANSMIT_DELAY 1000
+#define TRANSMIT_DELAY 10 // in minutes
 #define sensorPowerPin 4
 #define tempPin A3
 #define voltagePin A1
@@ -40,6 +41,7 @@ static void watchdogInterrupts (char mode) {
   sei();
 }
 
+
 static void lowPower (byte mode) {
   // prepare to go into power down mode
   set_sleep_mode(mode);
@@ -54,23 +56,6 @@ static void lowPower (byte mode) {
   ADCSRA = adcsraSave;
 }
 
-static byte loseSomeTime (word msecs) {
-  // only slow down for periods longer than the watchdog granularity
-  if (msecs >= 16) {
-    // watchdog needs to be running to regularly wake us from sleep mode
-    watchdogInterrupts(0); // 16ms
-    for (word ticks = msecs / 16; ticks > 0; --ticks) {
-      lowPower(SLEEP_MODE_PWR_DOWN); // now completely power down
-      // adjust the milli ticks, since we will have missed several
-      extern volatile unsigned long timer0_millis;
-      timer0_millis += 16;
-    }
-    watchdogInterrupts(-1); // off
-    return 1;
-  }
-  return 0;
-}
-
 // End of power-save code.
 
 void setup() {
@@ -78,16 +63,16 @@ void setup() {
   Serial.print("\n[propaneDemo]");
   rf12_initialize(NODE, RF12_915MHZ, GRP); //node, frequency, net group
   analogReference(INTERNAL); // use the 1.1v internal reference voltage
-  Sleepy::loseSomeTime(100);  //uC to sleep
+
+  Sleepy::loseSomeTime(1000);  //uC to sleep
   //pinMode(sensorPowerPin, OUTPUT);
 }
 
 void loop() {
   // spend most of the waiting time in a low-power sleep mode
   // note: the node's sense of time is no longer 100% accurate after sleeping
-  rf12_sleep(RF12_SLEEP);          // turn the radio off
-  while (!timer.poll(TRANSMIT_DELAY))
-    Sleepy::loseSomeTime(timer.remaining()); // go into a (controlled) comatose state
+ 
+
   lowPower(SLEEP_MODE_IDLE);  // still not running at full power
   digitalWrite(sensorPowerPin, HIGH); // enable the power pin to read
   payload.sequence++;
@@ -95,7 +80,10 @@ void loop() {
   pinMode(voltagePin, INPUT); // for voltage
   pinMode(hallEffectPin, INPUT); // for hall effect sensor
   payload.battVoltage = analogRead(voltagePin) * 10;
-  Sleepy::loseSomeTime(20); // let the ADC cool down for a bit
+  analogRead(hallEffectPin); // turn on the ADC
+  // let the ADC get stable for a bit, may need to be much longer for a hall effect sensor
+  // to get stable
+  delay(20);
   payload.hallEffectValue = analogRead(hallEffectPin);
   payload.temperature = analogRead(tempPin)*100;
   digitalWrite(sensorPowerPin, LOW); // got our result, turn off power
@@ -119,4 +107,14 @@ void loop() {
 
   rf12_sendNow(0, &payload, sizeof payload);
   rf12_sendWait(1); // sync mode!
+  
+   rf12_sleep(RF12_SLEEP);          // turn the radio off
+  
+ for (int i = 0; i < TRANSMIT_DELAY; i++){
+      while (!timer.poll(30000))  // delay is twice as long as its supposed to be
+  // for some reason. We didn't bother getting to the bottom of this - may be processor speed
+  // is wrong for some reason.
+    Sleepy::loseSomeTime(timer.remaining()); // go into a (controlled) comatose state
+ }
+
 }
