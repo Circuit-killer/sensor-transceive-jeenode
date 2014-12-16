@@ -1,7 +1,7 @@
 #define RF69_COMPAT 1    // define RF69_COMPAT 1  MUST BE FIRST
 #include <JeeLib.h>
 #include <avr/sleep.h>
-#define DEBUG 1
+#define DEBUG 0
 #define GRP 212
 #define NODE 3
 //#define TRANSMIT_DELAY 360000 // Transmit delay in JC units, 1 JC = ~2.5milliseconds
@@ -59,8 +59,10 @@ static void lowPower (byte mode) {
 // End of power-save code.
 
 void setup() {
+  #ifdef DEBUG 
   Serial.begin(57600);
   Serial.print("\n[propaneDemo]");
+  #endif
   rf12_initialize(NODE, RF12_915MHZ, GRP); //node, frequency, net group
   analogReference(INTERNAL); // use the 1.1v internal reference voltage
 
@@ -82,10 +84,10 @@ void loop() {
   payload.battVoltage = analogRead(voltagePin) * 10;
   analogRead(hallEffectPin); // turn on the ADC
   // let the ADC get stable for a bit, may need to be much longer for a hall effect sensor
-  // to get stable
+  // to become stable
   delay(20);
-  payload.hallEffectValue = analogRead(hallEffectPin);
-  payload.temperature = analogRead(tempPin)*100;
+  payload.hallEffectValue = analogRead(hallEffectPin); // read hall effect
+  payload.temperature = analogRead(tempPin)*100; // read temperature
   digitalWrite(sensorPowerPin, LOW); // got our result, turn off power
 
 #ifdef DEBUG // Serial debug dump payload
@@ -107,8 +109,7 @@ void loop() {
 
   rf12_sendNow(0, &payload, sizeof payload);
   rf12_sendWait(1); // sync mode!
-  
-   rf12_sleep(RF12_SLEEP);          // turn the radio off
+  rf12_sleep(RF12_SLEEP);          // turn the radio off
   
  for (int i = 0; i < TRANSMIT_DELAY; i++){
       while (!timer.poll(30000))  // delay is twice as long as its supposed to be
