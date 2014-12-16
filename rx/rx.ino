@@ -4,10 +4,10 @@
 #include <JeeLib.h>
 
 #define SERIAL_DEBUG 1
-#define TRANSMIT_DELAY_IN_MINS 10 // in minutes, set to the same as the one tx has
+#define TRANSMIT_DELAY_IN_MIN 10 // in minutes, set to the same as the one tx has
 #define screen_width 16
 #define screen_height 2
-int TRANSMIT_DELAY = TRANSMIT_DELAY_IN_MIN*60*1000L;
+unsigned long TRANSMIT_DELAY = TRANSMIT_DELAY_IN_MIN * 60L * 1000L;
 
 PortI2C myI2C (1);
 LiquidCrystalI2C lcd (myI2C);
@@ -35,7 +35,7 @@ void setup() {
   lcd.clear();
   lcd.print("Init Done");
   delay(1000);
-  lastRX = 0xFFFFFFFF;
+  lastRX =   millis();
 }
 
 void loop() {
@@ -43,7 +43,7 @@ void loop() {
   // rf12_recvDone() is true if new information has been received.
   // re12_crc == 0 indicates good transmission, checks validity of data
   if (rf12_recvDone() && rf12_crc == 0) {  // received good data if true
-    lastRX = millis();
+
     processData();
   }
 }
@@ -79,12 +79,13 @@ void processData() {
     lcd.print("Chng batt's now!");
   }
   delay(100);
+      lastRX = millis();
 }
 
 void checkForDeadBattery() {
   if (millis() - lastCheck > 1000) {
     lastCheck = millis();
-    if (millis() - lastRX > TRANSMIT_DELAY + 10000) { // wait 10 seconds after last receive should have been received
+    if ( (millis() - lastRX) > (TRANSMIT_DELAY + 10000) ) { // wait 10 seconds after last receive should have been received
       //lcd.clear(); leave last result on bottom of screen by not clearing
       lcd.setCursor(0, 0);
       lcd.print("                "); // dirty trick to prevent undercharacters
